@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mapa Interactivo</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="qwebchannel.js"></script>
+    <style>
+        #map { height: 100%; }
+        html, body { height: 100%; margin: 0; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script>                                        
+        var map = L.map('map').setView([0, 0], 2); // Centro del mapa
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,    
+        }).addTo(map);
+
+        var markerLayer = L.layerGroup().addTo(map);
+        var rectangulo = null;
+        // Variable para almacenar la última ubicación seleccionada
+        var selectedLocation = null;
+
+        new QWebChannel(qt.webChannelTransport, function(channel) {
+            window.pyqt = channel.objects.pyqt;
+            // Evento al hacer clic en el mapa
+            map.on('click', function(e) {
+                if (window.pyqt) {
+                    try{
+                        window.pyqt.emitirlocalizacion(e.latlng.lat, e.latlng.lng);
+                        markerLayer.clearLayers();
+                        if (selectedLocation) {
+                            markerLayer.removeLayer(selectedLocation);
+                        }
+                        selectedLocation = L.marker(e.latlng).addTo(markerLayer);
+                    } catch(error){
+                    }
+                }
+            });
+        });
+        function cargaMarcador(lat, lng) {
+            markerLayer.clearLayers();
+            L.marker([lat, lng]).addTo(markerLayer).bindPopup("Area").openPopup();
+            map.setView([lat, lng], 10);
+        }
+        function limpiar(){
+            markerLayer.clearLayers();
+            if (rectangulo){
+                map.removeLayer(rectangulo);
+            }
+        }
+        function area(lat,lng,ancho,largo){
+            var earthRadius = 6378137; 
+            var dLat = (largo/2) / earthRadius * (180 / Math.PI); 
+            var dLng = (ancho/2) / (earthRadius * Math.cos((lat * Math.PI) / 180)) * (180 / Math.PI); 
+
+            var sur = [lat-dLat,lng-dLng];
+            var norte = [lat+dLat,lng+dLng];
+            var puntos =[sur,norte];
+
+            if (rectangulo){
+                map.removeLayer(rectangulo);
+            }
+            rectangulo = L.rectangle(puntos, {color:"blue",weight: 2}).addTo(map);
+            map.fitBounds(puntos);
+        }
+
+    </script>
+</body>
+</html>
