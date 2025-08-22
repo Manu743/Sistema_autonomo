@@ -70,6 +70,7 @@ class Base_Datos():
                                     Longitud TEXT NOT NULL,
                                     Ancho TEXT NOT NULL,
                                     Largo TEXT NOT NULL,
+                                    Ubicacion TEXT NOT NULL,
                                     Estado BOOL DEFAULT 1
                                 )""")
             print("Se creo la tabla")
@@ -80,7 +81,7 @@ class Base_Datos():
     def crear_Area_Robot():
         conexion = sqlite3.connect(db)
         try:
-            conexion.execute("""CREATE TABLE Area (
+            conexion.execute("""CREATE TABLE Area_Robot (
                                     Area_Robot INTEGER PRIMARY KEY AUTOINCREMENT,
                                     estado INTEGER NOT NULL,
                                     Cod_Area INTEGER NOT NULL UNIQUE,
@@ -96,13 +97,15 @@ class Base_Datos():
     def crear_Matriz():
         conexion = sqlite3.connect(db)
         try:
-            conexion.execute("""CREATE TABLE Matriz_Area (
+            conexion.execute("""CREATE TABLE Matriz (
                                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                Cod_Area INTEGER NOT NULL,
+                                Cod_Area_Robot INTEGER NOT NULL,
+                                Cod_Usuario INTEGER NOT NULL,
                                 fila INTEGER NOT NULL,
                                 columna INTEGER NOT NULL,
                                 valor INTEGER,
-                                FOREIGN KEY (Cod_Area) REFERENCES Area(Cod_Area)
+                                FOREIGN KEY (Cod_Area_Robot) REFERENCES Area(Area_Robot)
+                                FOREIGN KEY (Cod_Usuario) REFERENCES Usuario(cod_Usuario)
                                     ON DELETE CASCADE
                                     ON UPDATE CASCADE
                             )""")
@@ -145,13 +148,20 @@ class Base_Datos():
         print("Se agrego Area")
         conexion.close
     
-    def Agregar_Matriz(self,datos: Matriz):
+    def agregar_matriz(self,datos: Matriz):
+        for i in range(5):
+            for j in range(5):
+                self.dato(datos.Area,datos.Usuario,i,j,datos.Matriz[i][j])
+        print("Se agrego Dato Matriz")
+
+
+    def dato(self,area,usuario,fila,columna,valor):
         conexion = sqlite3.connect(db)
         cursor = conexion.cursor()
-        cursor.execute("INSET INTO Matriz (cod_Area,fila,columna,valor) VALUES(?,?,?,?)",(datos.Area,datos.Fila,datos.Columna,datos.Valor))
+        cursor.execute("INSERT INTO Matriz (Cod_Area_Robot,Cod_Usuario,fila,columna,valor) VALUES(?,?,?,?,?)",(area,usuario,fila,columna,valor))
         conexion.commit()
-        print("Se agrego Dato Matriz")
         conexion.close
+
 #Listar Datos de tablas
 
     
@@ -175,6 +185,14 @@ class Base_Datos():
         conexion = sqlite3.connect(db)
         cursor=conexion.cursor()
         sql ="SELECT * FROM area"
+        cursor.execute(sql)
+        registro = cursor.fetchall()
+        return registro
+    
+    def recuperar_Matriz(self):
+        conexion = sqlite3.connect(db)
+        cursor=conexion.cursor()
+        sql = "SELECT * FROM Matriz WHERE Matriz.area = 1"
         cursor.execute(sql)
         registro = cursor.fetchall()
         return registro
@@ -271,7 +289,7 @@ class Base_Datos():
     #crear_Usuarios()
     #crear_Robots()
     #crear_Areas()
-
+    #crear_Matriz()
 
     def ver():
         conexion = sqlite3.connect(db)
@@ -319,7 +337,21 @@ class Base_Datos():
         finally:
             conexion.close()
 
-    #ver()
+    def vista_Matriz():
+        matriz = [[0 for _ in range(5)]for _ in range(5)]
+        conexion = sqlite3.connect(db)
+        cursor=conexion.cursor()
+        sql = "SELECT * FROM Matriz WHERE Matriz.Cod_Area_Robot = 1"
+        cursor.execute(sql)
+        registro = cursor.fetchall()
+        for i in registro:
+            matriz[i[3]][i[4]]=i[5]
+
+        print(matriz)
+            
+
+    vista_Matriz()
+    #ver()      
     #ver_Datos_Persona_Usuarios()
 
     

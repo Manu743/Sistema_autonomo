@@ -19,17 +19,17 @@ class Usuarios:
 
 
 class Areas:
-    def __init__(self,nombre,Latitud,longitud,ancho,largo):
+    def __init__(self,nombre,Latitud,longitud,ancho,largo,ubicacion):
         self.Nombre=nombre
         self.Latitud=Latitud
         self.Longitud=longitud
         self.Ancho=ancho
         self.Largo=largo
+        self.Ubicacion=ubicacion
 
 class Matriz:
-    def __init__(self,area,fila,columna,valor):
+    def __init__(self,area,usuario,matriz):
         self.Area=area
-        self.Fila=fila
-        self.Columna=columna
-        self.Valor=valor
-        pass
+        self.Usuario=usuario
+        self.Matriz=matriz
+        

@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QMainWindow, QApplication, QLineEdit, QWidget, QTableWidgetItem, QComboBox, QVBoxLayout, QLabel,QMessageBox
-from PyQt5.QtGui import QGuiApplication,QIcon
+from PyQt5.QtWidgets import QMainWindow, QApplication, QLineEdit, QWidget, QTableWidgetItem, QComboBox, QVBoxLayout, QLabel,QMessageBox,QPushButton
+from PyQt5.QtGui import QGuiApplication,QIcon,QImage,QPixmap
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.uic import loadUi 
 from PyQt5.QtCore import Qt,QUrl
@@ -11,9 +11,18 @@ from bd import *
 import os, sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Control')))
 #import Control
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'PDF')))
+import PDF
 from PyQt5.QtCore import pyqtSlot, pyqtSignal, QObject
 from PyQt5.QtCore import QTimer
-from PyQt5.QtGui import QImage
+#from PyQt5.QtGui import QImage
+import fitz
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table
+from reportlab.lib.styles import getSampleStyleSheet
+
 
 class MostrarMapa(QObject):
     locationSelected = pyqtSignal(float, float)
@@ -22,7 +31,6 @@ class MostrarMapa(QObject):
         self.locationSelected.emit(lat,long)
 	
 
-    
 class Pantallas(QMainWindow):
 	def __init__(self):
 		self.modo=0
@@ -97,6 +105,8 @@ class Pantallas(QMainWindow):
 		self.Tabla_Usuarios.cellClicked.connect(self.seleccionar_Usuario)
 
 		self.Historial_5.clicked.connect(lambda: self.stackedWidget_3.setCurrentWidget(self.Historial_6))
+		self.Historial_5.clicked.connect(lambda: self.carga_historial())
+
 		self.Notificacion_3.clicked.connect(lambda: self.stackedWidget_3.setCurrentWidget(self.Notificaciones_3))
 		
 		self.Lista_Areas.clicked.connect(lambda: self.stackedWidget_3.setCurrentWidget(self.Lista_Areas_2))
@@ -139,7 +149,7 @@ class Pantallas(QMainWindow):
 		area = self.AreasId[numero]
 		print(f'codigo: {codigo}')
 		print(f'area: {area}')
-		if codigo != "" and area != "":
+		if codigo !=  "" and area != "":
 			#self.close()
 			print("control")
 			#self.control = Control.control(codigo,area)
@@ -469,8 +479,9 @@ class Pantallas(QMainWindow):
 		longitud = self.Longitud_Area.text()
 		Ancho = self.Ancho_Area.text()
 		Largo = self.Largo_Area.text()
+		ubicacion = 'mapas/'+nombre+'.png'
 		if nombre !='' and latitud != '' and longitud != '' and Ancho != '' and Largo != '':
-			area = Areas(nombre,latitud,longitud,Ancho,Largo)
+			area = Areas(nombre,latitud,longitud,Ancho,Largo,ubicacion)
 			self.Total.Agregar_Area(area)
 			self.Nombre_Area.clear()
 			self.Latitud_Area.clear()
@@ -824,7 +835,78 @@ class Pantallas(QMainWindow):
 			self.cargar_mapa.page().runJavaScript("rectagulo_pixeles();", recibir_bounds)		
 		self.cargar_mapa.page().runJavaScript("limpiar();", limpiar_mapa)
 
-			
+	def carga_historial(self):
+		datos = [
+			(1, "robot", "area", "Manuel"),
+			(2,"carlos","area2","Carla")
+		]
+		i = len(datos)
+		self.Tabla_Historial_3.setRowCount(i)
+		tablerow = 0
+		for row, (codigo,robot,area,supervisor) in enumerate(datos):
+			self.Tabla_Historial_3.setItem(row,0,QTableWidgetItem(str(codigo)))
+			self.Tabla_Historial_3.setItem(row,1,QTableWidgetItem(robot))
+			self.Tabla_Historial_3.setItem(row,2,QTableWidgetItem(area))
+			self.Tabla_Historial_3.setItem(row,3,QTableWidgetItem(supervisor))
+
+			boton = QPushButton("Reporte")
+			boton.clicked.connect(lambda checked, r=row: self.abrir_reporte())
+			self.Tabla_Historial_3.setCellWidget(row, 4, boton)
+
+		header = self.Tabla_Historial_3.horizontalHeader()
+		header.setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+
+	def abrir_reporte(self):
+		datos ={
+			"nombre":'Manuel',
+			"capacidad":'2',
+			"tiempos":'13:00',
+			"matriz": [[1,2,3],[4,5,6],[7,8,9]],  # Ejemplo de matriz
+			"imagen":'./Menu/Imagenes/1.png'
+		}
+		#datos = {
+		#	"nombre": datos_fila["nombre"],
+		#	"capacidad": datos_fila["capacidad"],
+		#	"tiempos": datos_fila["tiempos"],
+		#	"matriz": [[1,2,3],[4,5,6],[7,8,9]],  # Ejemplo de matriz
+		#	"imagen": datos_fila["ruta_imagen"]
+		#}
+		ruta = f"./Menu/reportes/reporte_{datos['nombre']}.pdf"
+		self.generar_reporte(datos,ruta)
+
+		self.reporte = PDF.ReportePDFWindow(ruta)
+		self.reporte.show()
+
+	def generar_reporte(self,datos, output_path):
+		doc = SimpleDocTemplate(output_path, pagesize=A4)
+		elementos = []
+
+		estilos = getSampleStyleSheet()
+
+		# Título
+		elementos.append(Paragraph(f"Reporte de {datos['nombre']}", estilos['Title']))
+		elementos.append(Spacer(1, 12))
+
+		# Datos principales
+		elementos.append(Paragraph(f"Capacidad: {datos['capacidad']}", estilos['Normal']))
+		elementos.append(Paragraph(f"Tiempos: {datos['tiempos']}", estilos['Normal']))
+		elementos.append(Spacer(1, 12))
+
+		# Matriz como tabla
+		if "matriz" in datos:
+			tabla = Table(datos["matriz"])
+			elementos.append(tabla)
+			elementos.append(Spacer(1, 12))
+
+		# Imagen
+		if "imagen" in datos and os.path.exists(datos["imagen"]):
+			elementos.append(Image(datos["imagen"], width=200, height=150))
+			elementos.append(Spacer(1, 12))
+
+		doc.build(elementos)
+
+		
+
 if __name__ == '__main__':
 	app = QApplication(sys.argv)
 	my_app = Pantallas()
