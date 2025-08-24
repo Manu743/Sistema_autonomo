@@ -41,6 +41,7 @@ class Pantallas(QMainWindow):
 		self.valores = []
 		self.valoresRobots = []
 		self.valoresAreas = []
+		self.detalle = []
 		self.estado = 1
 		self.aux = 0
 		#uso de base de datos
@@ -106,6 +107,7 @@ class Pantallas(QMainWindow):
 
 		self.Historial_5.clicked.connect(lambda: self.stackedWidget_3.setCurrentWidget(self.Historial_6))
 		self.Historial_5.clicked.connect(lambda: self.carga_historial())
+		self.Tabla_Historial_3.cellClicked.connect(self.seleccionar_detalles)
 
 		self.Notificacion_3.clicked.connect(lambda: self.stackedWidget_3.setCurrentWidget(self.Notificaciones_3))
 		
@@ -479,10 +481,11 @@ class Pantallas(QMainWindow):
 		longitud = self.Longitud_Area.text()
 		Ancho = self.Ancho_Area.text()
 		Largo = self.Largo_Area.text()
-		ubicacion = 'mapas/'+nombre+'.png'
+		ubicacion = '../menu/Imagenes/'+nombre+'.png'
 		if nombre !='' and latitud != '' and longitud != '' and Ancho != '' and Largo != '':
 			area = Areas(nombre,latitud,longitud,Ancho,Largo,ubicacion)
 			self.Total.Agregar_Area(area)
+			self.guardar_mapa(area.Nombre)
 			self.Nombre_Area.clear()
 			self.Latitud_Area.clear()
 			self.Longitud_Area.clear()
@@ -740,7 +743,7 @@ class Pantallas(QMainWindow):
 
 		#area de mapa
 		self.cargar_mapa = QWebEngineView(self.mapa)
-		ruta = "file:///C:/Users/maren/OneDrive/Desktop/Proyecto/Diseño/Menu/mapa.html"
+		ruta = "file:///../Menu/mapa.html"
 		self.cargar_mapa.loadFinished.connect(self.inyectar)
 		self.cargar_mapa.load(QUrl(ruta))
 
@@ -786,7 +789,7 @@ class Pantallas(QMainWindow):
 		if largo != '' and ancho != '' and latitud != '' and longitud != '':
 			self.cargar_mapa.page().runJavaScript(f"area({latitud},{longitud},{ancho},{largo})")
 
-	def guardar_mapa(self):
+	def guardar_mapa(self,nombre):
 		print("entra")
 		if not hasattr(self,"cargar_mapa"):
 			print("mapa no cargado")
@@ -821,12 +824,10 @@ class Pantallas(QMainWindow):
 						print("error de recordato")
 						return
 					
-					nombre = self.Nombre_Area.text()
 					name = nombre+'.png'
-					carpeta = "mapas"
+					carpeta = "../Menu/Imagenes"
 					if not os.path.exists(carpeta):
 						os.makedirs(carpeta)
-
 					completo = os.path.join(carpeta, name)
 					recorte.save(completo)
 
@@ -856,21 +857,28 @@ class Pantallas(QMainWindow):
 		header = self.Tabla_Historial_3.horizontalHeader()
 		header.setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
 
+	def seleccionar_detalles(self,row,colum):
+		self.detalle.clear()
+		columna = self.Tabla_Historial_3.columnCount()
+		for col in range(columna):
+			item = self.Tabla_Historial_3.item(row, col)
+			if item is not None:
+				self.detalle.append(item.text())
+			else:
+				self.detalle.append("")
+		print(self.detalle)	
+
 	def abrir_reporte(self):
+		area = self.detalle[0]
+		Matriz= self.Total.Datos_matriz(area)
 		datos ={
-			"nombre":'Manuel',
+			"nombre":self.detalle[3],
 			"capacidad":'2',
-			"tiempos":'13:00',
-			"matriz": [[1,2,3],[4,5,6],[7,8,9]],  # Ejemplo de matriz
+			"tiempo":'13:00',
+			"matriz": Matriz,  # Ejemplo de matriz
 			"imagen":'./Menu/Imagenes/1.png'
 		}
-		#datos = {
-		#	"nombre": datos_fila["nombre"],
-		#	"capacidad": datos_fila["capacidad"],
-		#	"tiempos": datos_fila["tiempos"],
-		#	"matriz": [[1,2,3],[4,5,6],[7,8,9]],  # Ejemplo de matriz
-		#	"imagen": datos_fila["ruta_imagen"]
-		#}
+
 		ruta = f"./Menu/reportes/reporte_{datos['nombre']}.pdf"
 		self.generar_reporte(datos,ruta)
 
@@ -889,7 +897,7 @@ class Pantallas(QMainWindow):
 
 		# Datos principales
 		elementos.append(Paragraph(f"Capacidad: {datos['capacidad']}", estilos['Normal']))
-		elementos.append(Paragraph(f"Tiempos: {datos['tiempos']}", estilos['Normal']))
+		elementos.append(Paragraph(f"Tiempos: {datos['tiempo']}", estilos['Normal']))
 		elementos.append(Spacer(1, 12))
 
 		# Matriz como tabla

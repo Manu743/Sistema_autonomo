@@ -1616,7 +1616,22 @@ QPushButton:hover{
     QTableWidget::item:selected {
         background-color: #d5dbdb;  
         color: white; 
-    }</string>
+    }
+QPushButton{
+border-radius:10px;
+background-color: rgb(66, 73, 73); 
+font: 12pt &quot;Arial&quot;;
+color: rgb(255, 255, 255);
+border: 2px solid rgb(66, 73, 73);
+}
+
+QPushButton:hover{
+border-radius:10px; 
+font: 12pt &quot;Arial&quot;;
+color: rgb(255, 255, 255);
+border: 2px solid rgb(244, 69, 31);
+	background-color: rgb(244, 69, 31);
+}</string>
                 </property>
                 <property name="frameShadow">
                  <enum>QFrame::Plain</enum>
