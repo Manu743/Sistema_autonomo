@@ -1,12 +1,9 @@
 #para graficos
-from PyQt5.QtWidgets import QMainWindow, QApplication, QLineEdit, QWidget, QVBoxLayout, QPushButton
+from PyQt5.QtWidgets import QMainWindow, QApplication
 from PyQt5.QtGui import QImage, QPixmap
-from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, QUrl, QThread, Qt
+from PyQt5 import QtCore
+from PyQt5.QtCore import pyqtSignal, QThread, Qt
 from PyQt5.uic import loadUi 
-from PyQt5.QtWebEngineWidgets import QWebEngineView
-from PyQt5.QtWebChannel import QWebChannel
-
 
 import sys
 import time
@@ -22,7 +19,6 @@ import json
 import threading
 import requests
 import asyncio
-import websockets
 import queue
 import numpy as np
 import torch
@@ -80,7 +76,7 @@ class control(QMainWindow):
         self.Estado.setAlignment(Qt.AlignLeft)
         self.IpRobot.setText(datos[6])
         self.IpRobot.setAlignment(Qt.AlignLeft)
-        self.IpCamara.setText(datos[7])
+        self.IpCamara.setText(datos[8])
         self.IpCamara.setAlignment(Qt.AlignLeft)
         # Conexiones de UI
         self.Autonomo.clicked.connect(lambda:self.desconectar())
@@ -178,7 +174,8 @@ class Work(QThread):
     def __init__(self, codigo):
         super().__init__()
         datos = base.Obtener_Robot(codigo)
-        self.cam_ip = datos[7]  # IP ESP32-CAM
+        self.cam_ip = datos[8]  # IP ESP32-CAM
+        print(datos)
         print(self.cam_ip)
         self.scanning = True
 
@@ -213,11 +210,13 @@ class Work(QThread):
 #Conexion Websocket
 class WebSocketClient:
     def __init__(self, ip_robot):
-        self.url = f"ws://{ip_robot}:81"
+        self.url = f"ws://{ip_robot}:881"
         self.ws = None
         self.connected = False
         self.lock = threading.Lock()
         self.sensor_valor = None
+        self.distancia = None
+        self.avanzar = True
 
     def connect(self):
         def on_open(ws):
@@ -238,6 +237,11 @@ class WebSocketClient:
                 if "sensor" in data:
                     self.sensor_valor = int(data['sensor'])
                     print(f"sensor: {data['sensor']} ")
+                if "distancia" in data:
+                    self.distancia = int(data['distancia'])
+                    if self.distancia < 20.0:
+                        self.avanzar=False
+
             except json.JSONDecodeError:
                 print("codigo invalido: ",message)
 
@@ -296,7 +300,7 @@ class VideoWorker(QThread):
         self.grid_rows = 5
         self.grid_cols = 5
         datos = base.Obtener_Robot(codigo)
-        self.cam_ip = datos[7]
+        self.cam_ip = datos[8]
         self.esp_stream = ESP32CamStream(f'http://{self.cam_ip}/')
         self.running = True
 
@@ -319,7 +323,8 @@ class VideoWorker(QThread):
             for col in columnas:
                 if not self.recorrido_activo:
                     break
-                if self.obstaculo:
+                avanzar = self.ws.avanzar
+                if self.obstaculo and not avanzar:
                     print("entra a evadir")
                     if col < 5 and fila < 5 and col > 0 and fila >= 0 :
                         print("obstaculo registrado")

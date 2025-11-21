@@ -438,7 +438,7 @@ QPushButton:hover{
         <item>
          <widget class="QPushButton" name="cargarArea">
           <property name="text">
-           <string>Cargar Area</string>
+           <string>MAPA/CAMARA</string>
           </property>
          </widget>
         </item>
@@ -544,7 +544,7 @@ QPushButton:hover{
             <item>
              <widget class="QPushButton" name="Recorrido_Off">
               <property name="text">
-               <string>Detener</string>
+               <string>Pausa</string>
               </property>
              </widget>
             </item>

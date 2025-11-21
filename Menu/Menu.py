@@ -1,27 +1,31 @@
-from PyQt5.QtWidgets import QMainWindow, QApplication, QLineEdit, QWidget, QTableWidgetItem, QComboBox, QVBoxLayout, QLabel,QMessageBox,QPushButton
-from PyQt5.QtGui import QGuiApplication,QIcon,QImage,QPixmap
+from PyQt5.QtWidgets import QMainWindow, QApplication, QVBoxLayout,QMessageBox,QPushButton,QListWidgetItem
+from PyQt5.QtGui import QIcon,QIcon
+	
 from PyQt5 import QtCore, QtWidgets
+
 from PyQt5.uic import loadUi 
-from PyQt5.QtCore import Qt,QUrl
+from PyQt5.QtCore import Qt,QUrl,QSize
 import sys, subprocess
 from Clases import *
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtWebChannel import QWebChannel
 from bd import *
-import os, sys
+import os, sys,cv2
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Control')))
-#import Control
+import Control
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'PDF')))
 import PDF
 from PyQt5.QtCore import pyqtSlot, pyqtSignal, QObject
 from PyQt5.QtCore import QTimer
 #from PyQt5.QtGui import QImage
-import fitz
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table
 from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.pagesizes import A4
+
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib import colors
 
 
 class MostrarMapa(QObject):
@@ -41,6 +45,7 @@ class Pantallas(QMainWindow):
 		self.valores = []
 		self.valoresRobots = []
 		self.valoresAreas = []
+		self.detalle = []
 		self.estado = 1
 		self.aux = 0
 		#uso de base de datos
@@ -106,9 +111,13 @@ class Pantallas(QMainWindow):
 
 		self.Historial_5.clicked.connect(lambda: self.stackedWidget_3.setCurrentWidget(self.Historial_6))
 		self.Historial_5.clicked.connect(lambda: self.carga_historial())
+		self.Tabla_Historial_3.cellClicked.connect(self.seleccionar_detalles)
+
 
 		self.Notificacion_3.clicked.connect(lambda: self.stackedWidget_3.setCurrentWidget(self.Notificaciones_3))
-		
+		self.Notificacion_3.clicked.connect(lambda: self.cargar())
+
+
 		self.Lista_Areas.clicked.connect(lambda: self.stackedWidget_3.setCurrentWidget(self.Lista_Areas_2))
 		self.Lista_Areas.clicked.connect(lambda:self.ver_mapa())
 		self.Lista_Areas.clicked.connect(self.mostrar_Areas)
@@ -118,7 +127,7 @@ class Pantallas(QMainWindow):
 		self.Agregar_Area_3.clicked.connect(lambda:self.add_mod_areas())
 		self.Previsualizar.clicked.connect(lambda:self.previsualizar())
 		self.table_Areas.cellClicked.connect(self.seleccionar_Area)
-		#self.Imagen.clicked.connect(lambda:self.guardar_mapa())
+		self.Guardamapa.clicked.connect(lambda:self.guardar_mapa())
 		
 
 		self.Ver1.clicked.connect(lambda: self.controles(0))
@@ -152,8 +161,8 @@ class Pantallas(QMainWindow):
 		if codigo !=  "" and area != "":
 			#self.close()
 			print("control")
-			#self.control = Control.control(codigo,area)
-			#self.control.show()
+			self.control = Control.control(codigo,area)
+			self.control.show()
 		else:
 			QMessageBox.warning(self, "Robot no agregado", "Agregue un robot")
 
@@ -483,6 +492,7 @@ class Pantallas(QMainWindow):
 		if nombre !='' and latitud != '' and longitud != '' and Ancho != '' and Largo != '':
 			area = Areas(nombre,latitud,longitud,Ancho,Largo,ubicacion)
 			self.Total.Agregar_Area(area)
+			#self.guardar_mapa()
 			self.Nombre_Area.clear()
 			self.Latitud_Area.clear()
 			self.Longitud_Area.clear()
@@ -596,7 +606,8 @@ class Pantallas(QMainWindow):
 		
 	def modificarRobot(self):
 		Ip_Robot = self.Ip_Robot.text()
-		Ip_CamL = self.Ip_Cam.text()
+		Ip_CamL = "1"
+		Ip_CamR = self.Ip_Cam.text()
 		nombre = self.Nombre_Robot.text()
 		capacidad = self.Capacidad_Robot.text()
 		ancho = self.Ancho_Robot.text()
@@ -604,7 +615,7 @@ class Pantallas(QMainWindow):
 		alto = self.Alto_Robot.text()
 		tabla = "Robot"
 		columnas = ["Nombre", "Capacidad", "Ancho", "Largo","Alto", "IpRobot", "IpCamL", "IpCamR"]
-		valores = [nombre,capacidad,ancho,largo,alto,Ip_Robot,Ip_CamL]
+		valores = [nombre,capacidad,ancho,largo,alto,Ip_Robot,Ip_CamL,Ip_CamR]
 		condicion = "cod_Robot = ?"
 		id = self.Total.obtenerIDRobot(self.valoresRobots[0])
 		valores_condicion = (id,)
@@ -719,6 +730,7 @@ class Pantallas(QMainWindow):
 		id = self.Total.obtenerIDArea(self.valoresAreas[0])
 		valores_condicion=(id,)
 		self.Total.Modificar(tabla,columnas,valores,condicion,valores_condicion)
+		#self.guardar_mapa(nombre)
 		self.stackedWidget_3.setCurrentWidget(self.Lista_Areas_2)
 		self.valoresAreas.clear()
 		self.Nombre_Area.clear()
@@ -835,77 +847,212 @@ class Pantallas(QMainWindow):
 			self.cargar_mapa.page().runJavaScript("rectagulo_pixeles();", recibir_bounds)		
 		self.cargar_mapa.page().runJavaScript("limpiar();", limpiar_mapa)
 
+			
 	def carga_historial(self):
-		datos = [
-			(1, "robot", "area", "Manuel"),
-			(2,"carlos","area2","Carla")
-		]
-		i = len(datos)
-		self.Tabla_Historial_3.setRowCount(i)
-		tablerow = 0
-		for row, (codigo,robot,area,supervisor) in enumerate(datos):
-			self.Tabla_Historial_3.setItem(row,0,QTableWidgetItem(str(codigo)))
-			self.Tabla_Historial_3.setItem(row,1,QTableWidgetItem(robot))
-			self.Tabla_Historial_3.setItem(row,2,QTableWidgetItem(area))
-			self.Tabla_Historial_3.setItem(row,3,QTableWidgetItem(supervisor))
-
+		datos = self.Total.Listar_Area_Robot()
+		self.Tabla_Historial_3.setRowCount(len(datos))
+		print(datos)
+		for tablerow, row in enumerate(datos):
+			# Agregar datos
+			self.Tabla_Historial_3.setItem(tablerow, 0, QtWidgets.QTableWidgetItem(str(row[0])))
+			self.Tabla_Historial_3.setItem(tablerow, 1, QtWidgets.QTableWidgetItem(str(row[3])))
+			self.Tabla_Historial_3.setItem(tablerow, 2, QtWidgets.QTableWidgetItem(str(row[2])))
+			self.Tabla_Historial_3.setItem(tablerow, 3, QtWidgets.QTableWidgetItem(str(row[4])))
+			self.Tabla_Historial_3.setItem(tablerow, 4, QtWidgets.QTableWidgetItem(str(row[1])))
+			# Agregar botón
 			boton = QPushButton("Reporte")
 			boton.clicked.connect(lambda checked, r=row: self.abrir_reporte())
-			self.Tabla_Historial_3.setCellWidget(row, 4, boton)
+			self.Tabla_Historial_3.setCellWidget(tablerow, 5, boton)
 
+		# Bloquear edición
+		for row in range(self.Tabla_Historial_3.rowCount()):
+			for col in range(self.Tabla_Historial_3.columnCount()):
+				item = self.Tabla_Historial_3.item(row, col)
+				if item:
+					item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+
+		# Ajustar cabecera
 		header = self.Tabla_Historial_3.horizontalHeader()
 		header.setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
 
+
+	def seleccionar_detalles(self,row,colum):
+		self.detalle.clear()
+		columna = self.Tabla_Historial_3.columnCount()
+		for col in range(columna):
+			item = self.Tabla_Historial_3.item(row, col)
+			if item is not None:
+				self.detalle.append(item.text())
+			else:
+				self.detalle.append("")
+		print(self.detalle)
+
 	def abrir_reporte(self):
+		area = self.detalle[0]
+		Matriz= self.Total.Datos_matriz(area)
 		datos ={
-			"nombre":'Manuel',
-			"capacidad":'2',
-			"tiempos":'13:00',
-			"matriz": [[1,2,3],[4,5,6],[7,8,9]],  # Ejemplo de matriz
-			"imagen":'./Menu/Imagenes/1.png'
+			"nombre":self.detalle[0],
+			"area":self.detalle[2],
+			"robot":self.detalle[1],
+			"usuario":self.detalle[3],
+			"fecha":self.detalle[4],
+			"tiempo":'',
+			"matriz": Matriz,  # Ejemplo de matriz
+			"imagen":f"./mapas/{self.detalle[2]}.png"
 		}
-		#datos = {
-		#	"nombre": datos_fila["nombre"],
-		#	"capacidad": datos_fila["capacidad"],
-		#	"tiempos": datos_fila["tiempos"],
-		#	"matriz": [[1,2,3],[4,5,6],[7,8,9]],  # Ejemplo de matriz
-		#	"imagen": datos_fila["ruta_imagen"]
-		#}
+
 		ruta = f"./Menu/reportes/reporte_{datos['nombre']}.pdf"
 		self.generar_reporte(datos,ruta)
 
 		self.reporte = PDF.ReportePDFWindow(ruta)
 		self.reporte.show()
 
-	def generar_reporte(self,datos, output_path):
+	def generar_reporte(self, datos, output_path):
 		doc = SimpleDocTemplate(output_path, pagesize=A4)
 		elementos = []
 
 		estilos = getSampleStyleSheet()
+		estilo_titulo = ParagraphStyle(
+			"titulo_centrado",
+			parent=estilos["Title"],
+			alignment=1,  # centrado
+			textColor=colors.HexColor("#2E86C1")
+		)
 
-		# Título
-		elementos.append(Paragraph(f"Reporte de {datos['nombre']}", estilos['Title']))
-		elementos.append(Spacer(1, 12))
+		# --- Título principal ---
+		elementos.append(Paragraph(f"Reporte de {datos['nombre']}", estilo_titulo))
+		elementos.append(Spacer(1, 20))
 
-		# Datos principales
-		elementos.append(Paragraph(f"Capacidad: {datos['capacidad']}", estilos['Normal']))
-		elementos.append(Paragraph(f"Tiempos: {datos['tiempos']}", estilos['Normal']))
-		elementos.append(Spacer(1, 12))
+		# --- Datos principales en tabla ---
+		info = [
+			["Area: ", datos["area"]],
+			["Robot: ", datos["robot"]],
+			["Usuario: ", datos["usuario"]],
+			["Fecha: ",datos["fecha"]],
+			["Tiempo: ",datos["tiempo"]],
+		]
+		tabla_info = Table(info, hAlign="LEFT", colWidths=[100, 300])
+		tabla_info.setStyle(TableStyle([
+			("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#D5DBDB")),
+			("TEXTCOLOR", (0, 0), (-1, -1), colors.black),
+			("FONTNAME", (0, 0), (-1, -1), "Helvetica"),
+			("FONTSIZE", (0, 0), (-1, -1), 10),
+			("ALIGN", (0, 0), (-1, -1), "LEFT"),
+			("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+		]))
+		elementos.append(tabla_info)
+		elementos.append(Spacer(1, 20))
 
-		# Matriz como tabla
+		# --- Matriz como tabla ---
 		if "matriz" in datos:
-			tabla = Table(datos["matriz"])
-			elementos.append(tabla)
-			elementos.append(Spacer(1, 12))
+			elementos.append(Paragraph("Matriz de recorrido", estilos["Heading2"]))
+			tabla_matriz = Table(datos["matriz"], hAlign="CENTER")
+			tabla_matriz.setStyle(TableStyle([
+				("GRID", (0, 0), (-1, -1), 0.5, colors.black),
+				("ALIGN", (0, 0), (-1, -1), "CENTER"),
+				("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+				("BACKGROUND", (0, 0), (-1, -1), colors.whitesmoke),
+				("TEXTCOLOR", (0, 0), (-1, -1), colors.black),
+			]))
+			elementos.append(tabla_matriz)
+			elementos.append(Spacer(1, 20))
 
-		# Imagen
+        # --- Imagen con matriz dibujada ---
 		if "imagen" in datos and os.path.exists(datos["imagen"]):
-			elementos.append(Image(datos["imagen"], width=200, height=150))
+			elementos.append(Paragraph("Imagen asociada con recorrido", estilos["Heading2"]))
+
+            # Dibujar la matriz sobre la imagen
+			temp_img = f"temp_{datos['area']}.png"
+			self.dibujar_matriz_sobre_imagen_transparente(datos["imagen"], datos["matriz"], temp_img)
+
+            # Insertar imagen en PDF
+			elementos.append(Image(temp_img, width=250, height=180))
 			elementos.append(Spacer(1, 12))
 
+		# --- Pie de página ---
+		elementos.append(Spacer(1, 30))
+		elementos.append(Paragraph("Reporte generado automáticamente con el sistema de control.", estilos["Normal"]))
+
+		# Construir PDF
 		doc.build(elementos)
 
-		
+	def dibujar_matriz_sobre_imagen_transparente(self,imagen_path, matriz, output_path):
+		# Cargar imagen original
+		img = cv2.imread(imagen_path)
+		overlay = img.copy()  # Capa para dibujar colores
+
+		h, w, _ = img.shape
+		filas = len(matriz)
+		cols = len(matriz[0])
+		cell_h = h // filas
+		cell_w = w // cols
+
+		# Colores RGBA (BGR para OpenCV) y alpha
+		colores = {
+			1: ((255, 0, 0), 0.4),   # recorrido azul
+			2: ((0, 0, 255), 0.4),   # mina roja
+			3: ((0, 255, 0), 0.4),   # obstáculo verde
+		}
+
+		for i in range(filas):
+			for j in range(cols):
+				valor = matriz[i][j]
+				if valor in colores:
+					color, alpha = colores[valor]
+					top_left = (j * cell_w, i * cell_h)
+					bottom_right = ((j+1) * cell_w, (i+1) * cell_h)
+					
+					# Dibujar rectángulo de color sobre la capa overlay
+					cv2.rectangle(overlay, top_left, bottom_right, color, -1)
+				
+				# Dibujar líneas de cuadrícula siempre
+				cv2.rectangle(overlay,
+							(j * cell_w, i * cell_h),
+							((j+1) * cell_w, (i+1) * cell_h),
+							(255, 255, 255),
+							1)
+
+		# Mezclar la capa overlay con la imagen original para aplicar transparencia
+		cv2.addWeighted(overlay, 0.6, img, 0.4, 0, img)
+
+		# Guardar la imagen resultante
+		cv2.imwrite(output_path, img)
+		return output_path
+
+
+	def agregar_notificacion(self,texto):
+		self.listView_3.addItem(texto)
+		iconos = {
+			"Robot conectado correctamente.": QIcon("iconos/wifi.png"),
+            "Sensor detectó obstáculo.": QIcon("iconos/obstaculos.png"),
+            "Batería baja.": QIcon("iconos/bajo-nivel-de-bateria.png"),
+            "Conexión WiFi perdida.": QIcon("./iconos/no-wifi.png"),
+            "Ruta completada con éxito.": QIcon("./iconos/documento.png"),
+		}
+
+		# Crear el item con texto e icono
+		item = QListWidgetItem(texto)
+
+		icono = iconos.get(texto, QIcon())
+		item.setIcon(icono)
+
+		self.listView_3.addItem(item)
+		self.listView_3.setIconSize(QSize(24,24))
+
+
+	def limpiar(self):
+		self.listView_3.clear()
+
+	def cargar(self):
+		import random
+		mensajes = [
+			"Robot conectado correctamente.",
+			"Sensor detectó obstáculo.",
+			"Batería baja.",
+			"Conexión WiFi perdida.",
+			"Ruta completada con éxito."
+		]
+		self.agregar_notificacion(random.choice(mensajes))
 
 if __name__ == '__main__':
 	app = QApplication(sys.argv)

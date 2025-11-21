@@ -378,7 +378,7 @@ QPushButton:hover{
              <number>0</number>
             </property>
             <property name="currentIndex">
-             <number>2</number>
+             <number>4</number>
             </property>
             <widget class="QWidget" name="Lista_Robots_2">
              <property name="minimumSize">
@@ -693,6 +693,33 @@ QPushButton:hover{
                 </item>
                 <item>
                  <layout class="QHBoxLayout" name="horizontalLayout_14">
+                  <item>
+                   <widget class="QPushButton" name="pushButton">
+                    <property name="styleSheet">
+                     <string notr="true">QPushButton{
+	border-radius:10px;
+	background-color: rgb(98, 101, 103); 
+	font: 16pt &quot;Arial&quot;;
+	color: rgb(255, 255, 255);
+	border: 2px solid rgb(66, 73, 73);
+	width: 150px;
+    height: 30px;
+}
+
+
+QPushButton:hover{
+	border-radius:10px; 
+	font: 16pt &quot;Arial&quot;;
+	color: rgb(255, 255, 255);
+	border: 2px solid rgb(244, 69, 31);
+	background-color: rgb(244, 69, 31);
+}</string>
+                    </property>
+                    <property name="text">
+                     <string>Guardar Busquedas</string>
+                    </property>
+                   </widget>
+                  </item>
                   <item>
                    <spacer name="horizontalSpacer_26">
                     <property name="orientation">
@@ -1628,10 +1655,10 @@ QPushButton:hover{
                  <enum>Qt::SolidLine</enum>
                 </property>
                 <property name="rowCount">
-                 <number>3</number>
+                 <number>0</number>
                 </property>
                 <property name="columnCount">
-                 <number>5</number>
+                 <number>6</number>
                 </property>
                 <attribute name="horizontalHeaderCascadingSectionResizes">
                  <bool>false</bool>
@@ -1639,21 +1666,6 @@ QPushButton:hover{
                 <attribute name="horizontalHeaderDefaultSectionSize">
                  <number>155</number>
                 </attribute>
-                <row>
-                 <property name="text">
-                  <string>1</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>2</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>3</string>
-                 </property>
-                </row>
                 <column>
                  <property name="text">
                   <string>Codigo</string>
@@ -1676,84 +1688,14 @@ QPushButton:hover{
                 </column>
                 <column>
                  <property name="text">
+                  <string>Fecha</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
                   <string>Ver</string>
                  </property>
                 </column>
-                <item row="0" column="0">
-                 <property name="text">
-                  <string>245</string>
-                 </property>
-                </item>
-                <item row="0" column="1">
-                 <property name="text">
-                  <string>Robot1</string>
-                 </property>
-                </item>
-                <item row="0" column="2">
-                 <property name="text">
-                  <string>Area1</string>
-                 </property>
-                </item>
-                <item row="0" column="3">
-                 <property name="text">
-                  <string>Manuel Arenas</string>
-                 </property>
-                </item>
-                <item row="0" column="4">
-                 <property name="text">
-                  <string/>
-                 </property>
-                </item>
-                <item row="1" column="0">
-                 <property name="text">
-                  <string>1234</string>
-                 </property>
-                </item>
-                <item row="1" column="1">
-                 <property name="text">
-                  <string>Robot2</string>
-                 </property>
-                </item>
-                <item row="1" column="2">
-                 <property name="text">
-                  <string>Area2</string>
-                 </property>
-                </item>
-                <item row="1" column="3">
-                 <property name="text">
-                  <string>Manuel Arenas</string>
-                 </property>
-                </item>
-                <item row="1" column="4">
-                 <property name="text">
-                  <string/>
-                 </property>
-                </item>
-                <item row="2" column="0">
-                 <property name="text">
-                  <string>542</string>
-                 </property>
-                </item>
-                <item row="2" column="1">
-                 <property name="text">
-                  <string>Robot3</string>
-                 </property>
-                </item>
-                <item row="2" column="2">
-                 <property name="text">
-                  <string>Area4</string>
-                 </property>
-                </item>
-                <item row="2" column="3">
-                 <property name="text">
-                  <string>Ronaldo Rua</string>
-                 </property>
-                </item>
-                <item row="2" column="4">
-                 <property name="text">
-                  <string/>
-                 </property>
-                </item>
                </widget>
               </item>
               <item row="2" column="0">
@@ -2315,12 +2257,23 @@ QPushButton:hover{
                      </spacer>
                     </item>
                     <item>
-                     <widget class="QListView" name="listView_3">
+                     <widget class="QListWidget" name="listView_3">
                       <property name="minimumSize">
                        <size>
                         <width>500</width>
                         <height>500</height>
                        </size>
+                      </property>
+                      <property name="styleSheet">
+                       <string notr="true">QListWidget {
+                background-color: #F2F2F3;
+                border: 1px solid #0A0A0A;
+                font-size: 14px;
+                padding: 5px;
+            }
+QListWidget::item {
+                padding: 6px;
+            }</string>
                       </property>
                      </widget>
                     </item>
@@ -3497,6 +3450,23 @@ QPushButton:hover{
                       </property>
                       <property name="text">
                        <string>Previsualizar Area</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="Guardamapa">
+                      <property name="styleSheet">
+                       <string notr="true">
+		font-family: Arial;
+        font-size: 26px;
+        color: white;
+        text-align: center;
+        font-weight: bold;
+		border: 2px solid rgb(66, 73, 73);
+</string>
+                      </property>
+                      <property name="text">
+                       <string>Guarda Mapa</string>
                       </property>
                      </widget>
                     </item>

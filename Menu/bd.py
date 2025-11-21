@@ -1,6 +1,7 @@
 import sqlite3
 from Clases import *
 import hashlib
+from datetime import datetime,timezone
 
 db="datos.db"
 class Base_Datos():
@@ -84,10 +85,15 @@ class Base_Datos():
             conexion.execute("""CREATE TABLE Area_Robot (
                                     Area_Robot INTEGER PRIMARY KEY AUTOINCREMENT,
                                     estado INTEGER NOT NULL,
-                                    Cod_Area INTEGER NOT NULL UNIQUE,
-                                    Cod_Robot INTEGER NOT NULL UNIQUE,
+                                    Cod_Area INTEGER NOT NULL,
+                                    Cod_Robot INTEGER NOT NULL,
+                                    Cod_usuario INTEGER NOT NULL,
+                                    Fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                    tiempo INTEGER,
+
                                     FOREIGN KEY (Cod_Area) REFERENCES Area(Cod_Area),  
                                     FOREIGN KEY (Cod_Robot) REFERENCES Robot(Cod_Robot)
+                                    FOREIGN KEY (Cod_usuario) REFERENCES Usuarios(cod_Usuario)
                                 )""")
             print("Se creo la tabla Area_Robot")
         except sqlite3.OperationalError:
@@ -101,6 +107,7 @@ class Base_Datos():
                                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                                 Cod_Area_Robot INTEGER NOT NULL,
                                 Cod_Usuario INTEGER NOT NULL,
+                                fecha date NOT NULL,
                                 fila INTEGER NOT NULL,
                                 columna INTEGER NOT NULL,
                                 valor INTEGER,
@@ -143,22 +150,31 @@ class Base_Datos():
     def Agregar_Area(self,datos: Areas):
         conexion = sqlite3.connect(db)
         cursor = conexion.cursor()
-        cursor.execute("INSERT INTO Area (nombre,latitud,longitud,ancho,largo) VALUES(?,?,?,?,?)",(datos.Nombre,datos.Latitud,datos.Longitud,datos.Ancho,datos.Largo))
+        cursor.execute("INSERT INTO Area (nombre,latitud,longitud,ancho,largo,ubicacion) VALUES(?,?,?,?,?,?)",(datos.Nombre,datos.Latitud,datos.Longitud,datos.Ancho,datos.Largo,datos.Ubicacion))
         conexion.commit()
         print("Se agrego Area")
         conexion.close
-    
-    def agregar_matriz(self,datos: Matriz):
-        for i in range(5):
-            for j in range(5):
-                self.dato(datos.Area,datos.Usuario,i,j,datos.Matriz[i][j])
-        print("Se agrego Dato Matriz")
 
-
-    def dato(self,area,usuario,fila,columna,valor):
+    def Agregar_Area_Robot(self,datos: Area_Robot):
         conexion = sqlite3.connect(db)
         cursor = conexion.cursor()
-        cursor.execute("INSERT INTO Matriz (Cod_Area_Robot,Cod_Usuario,fila,columna,valor) VALUES(?,?,?,?,?)",(area,usuario,fila,columna,valor))
+        cursor.execute("INSERT INTO Area_Robot (estado,cod_area,cod_robot,cod_usuario) VALUES (?,?,?,?)",(datos.Estado,datos.Area,datos.Robot,datos.Usuario))
+        conexion.commit()
+        print("se agrego Area_Robot")
+        conexion.close
+
+    def agregar_matriz(self,datos: Matriz):
+        fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        for i in range(5):
+            for j in range(5):
+                self.dato(datos.Area_Robot,datos.Usuario,i,j,datos.Matriz[i][j],fecha)
+        print("Se agrego Matriz")
+
+
+    def dato(self,area_robot,usuario,fila,columna,valor,fecha):
+        conexion = sqlite3.connect(db)
+        cursor = conexion.cursor()
+        cursor.execute("INSERT INTO Matriz (Cod_Area_Robot,Cod_Usuario,fila,columna,valor,fecha) VALUES(?,?,?,?,?,?)",(area_robot,usuario,fila,columna,valor,fecha))
         conexion.commit()
         conexion.close
 
@@ -189,13 +205,31 @@ class Base_Datos():
         registro = cursor.fetchall()
         return registro
     
-    def recuperar_Matriz(self):
+    def Listar_Area_Robot(self):
         conexion = sqlite3.connect(db)
         cursor=conexion.cursor()
-        sql = "SELECT * FROM Matriz WHERE Matriz.area = 1"
+        sql ="SELECT area_robot.Area_Robot,area_robot.fecha, area.nombre,robot.nombre,usuarios.usuario  " \
+        "FROM area_robot " \
+        "INNER JOIN area ON area_robot.cod_area = area.cod_area " \
+        "INNER JOIN robot ON area_robot.cod_robot = robot.cod_robot " \
+        "INNER JOIN Usuarios ON area_robot.cod_usuario = Usuarios.cod_usuario "
         cursor.execute(sql)
         registro = cursor.fetchall()
         return registro
+    
+    def Datos_matriz(self,area):
+        matriz = [[0 for _ in range(5)]for _ in range(5)]
+        conexion = sqlite3.connect(db)
+        cursor=conexion.cursor()
+        cursor.execute("SELECT * FROM MATRIZ WHERE MATRIZ.COD_AREA_ROBOT = ?",(area,))
+        registro = cursor.fetchall()
+        print(registro)
+        for i in registro:
+            fila = int(i[4])
+            colum = int(i[5])
+            matriz[fila][colum]=i[6]
+        return matriz
+            
     
     def obtenerIDUsuario(self,nombre):
         conexion = sqlite3.connect("datos.db")
@@ -285,11 +319,13 @@ class Base_Datos():
         except sqlite3.Error as e:
             print(f"Error al deshabilitar el usuario: {e}")
     
+    
     #crear_personas()
     #crear_Usuarios()
     #crear_Robots()
     #crear_Areas()
     #crear_Matriz()
+    #crear_Area_Robot()
 
     def ver():
         conexion = sqlite3.connect(db)
@@ -337,20 +373,21 @@ class Base_Datos():
         finally:
             conexion.close()
 
-    def vista_Matriz():
+    def vista_Matriz(cod_area):
         matriz = [[0 for _ in range(5)]for _ in range(5)]
         conexion = sqlite3.connect(db)
         cursor=conexion.cursor()
         sql = "SELECT * FROM Matriz WHERE Matriz.Cod_Area_Robot = 1"
-        cursor.execute(sql)
+        cursor.execute("SELECT * FROM Matriz WHERE Matriz.Cod_Area_Robot = ?",(cod_area,))
         registro = cursor.fetchall()
         for i in registro:
-            matriz[i[3]][i[4]]=i[5]
-
+            fila = int(i[3])
+            colum = int(i[4])
+            matriz[fila][colum]=i[5]
         print(matriz)
             
 
-    vista_Matriz()
+    #vista_Matriz()
     #ver()      
     #ver_Datos_Persona_Usuarios()
 
