@@ -113,7 +113,6 @@ class Pantallas(QMainWindow):
 		self.Historial_5.clicked.connect(lambda: self.carga_historial())
 		self.Tabla_Historial_3.cellClicked.connect(self.seleccionar_detalles)
 
-
 		self.Notificacion_3.clicked.connect(lambda: self.stackedWidget_3.setCurrentWidget(self.Notificaciones_3))
 		self.Notificacion_3.clicked.connect(lambda: self.cargar())
 
@@ -488,7 +487,7 @@ class Pantallas(QMainWindow):
 		longitud = self.Longitud_Area.text()
 		Ancho = self.Ancho_Area.text()
 		Largo = self.Largo_Area.text()
-		ubicacion = 'mapas/'+nombre+'.png'
+		ubicacion = '../menu/Imagenes/'+nombre+'.png'
 		if nombre !='' and latitud != '' and longitud != '' and Ancho != '' and Largo != '':
 			area = Areas(nombre,latitud,longitud,Ancho,Largo,ubicacion)
 			self.Total.Agregar_Area(area)
@@ -752,7 +751,7 @@ class Pantallas(QMainWindow):
 
 		#area de mapa
 		self.cargar_mapa = QWebEngineView(self.mapa)
-		ruta = "file:///C:/Users/maren/OneDrive/Desktop/Proyecto/Diseño/Menu/mapa.html"
+		ruta = "file:///../Menu/mapa.html"
 		self.cargar_mapa.loadFinished.connect(self.inyectar)
 		self.cargar_mapa.load(QUrl(ruta))
 
@@ -798,7 +797,7 @@ class Pantallas(QMainWindow):
 		if largo != '' and ancho != '' and latitud != '' and longitud != '':
 			self.cargar_mapa.page().runJavaScript(f"area({latitud},{longitud},{ancho},{largo})")
 
-	def guardar_mapa(self):
+	def guardar_mapa(self,nombre):
 		print("entra")
 		if not hasattr(self,"cargar_mapa"):
 			print("mapa no cargado")
@@ -833,12 +832,10 @@ class Pantallas(QMainWindow):
 						print("error de recordato")
 						return
 					
-					nombre = self.Nombre_Area.text()
 					name = nombre+'.png'
-					carpeta = "mapas"
+					carpeta = "../Menu/Imagenes"
 					if not os.path.exists(carpeta):
 						os.makedirs(carpeta)
-
 					completo = os.path.join(carpeta, name)
 					recorte.save(completo)
 
@@ -874,7 +871,6 @@ class Pantallas(QMainWindow):
 		# Ajustar cabecera
 		header = self.Tabla_Historial_3.horizontalHeader()
 		header.setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
-
 
 	def seleccionar_detalles(self,row,colum):
 		self.detalle.clear()

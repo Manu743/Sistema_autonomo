@@ -72,6 +72,7 @@ class Base_Datos():
                                     Ancho TEXT NOT NULL,
                                     Largo TEXT NOT NULL,
                                     Ubicacion TEXT NOT NULL,
+                                    Ruta TEXT NOT NULL,
                                     Estado BOOL DEFAULT 1
                                 )""")
             print("Se creo la tabla")
@@ -205,17 +206,17 @@ class Base_Datos():
         registro = cursor.fetchall()
         return registro
     
-    def Listar_Area_Robot(self):
+    def Datos_matriz(self,area):
+        matriz = [[0 for _ in range(5)]for _ in range(5)]
         conexion = sqlite3.connect(db)
         cursor=conexion.cursor()
-        sql ="SELECT area_robot.Area_Robot,area_robot.fecha, area.nombre,robot.nombre,usuarios.usuario  " \
-        "FROM area_robot " \
-        "INNER JOIN area ON area_robot.cod_area = area.cod_area " \
-        "INNER JOIN robot ON area_robot.cod_robot = robot.cod_robot " \
-        "INNER JOIN Usuarios ON area_robot.cod_usuario = Usuarios.cod_usuario "
-        cursor.execute(sql)
+        sql = "SELECT * FROM Matriz WHERE Matriz.Cod_Area_Robot = ?"
+        cursor.execute("SELECT * FROM MATRIZ WHERE MATRIZ.COD_AREA_ROBOT = ?",(area,))
         registro = cursor.fetchall()
-        return registro
+        for i in registro:
+            matriz[i[3]][i[4]]=i[5]
+        return matriz
+    
     
     def Datos_matriz(self,area):
         matriz = [[0 for _ in range(5)]for _ in range(5)]
