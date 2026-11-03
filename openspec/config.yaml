@@ -1,0 +1,34 @@
+schema: spec-driven
+
+context: |
+  Tech stack: Python 3.11 + PyQt5 + SQLite + OpenCV + YOLOv5 + WebSocket + ReportLab
+  Architecture: Monolithic desktop app with feature-based directory structure (GUI Login, Menu, Control)
+  Testing: No test runner, no test files, no CI detected
+  Code style: No linter/formatter/type checker configured; Spanish variable names and comments
+  Persistence: SQLite (datos.db), Qt Designer .ui files, mapas/ PNG assets
+  Dependencies: PyQt5, opencv-python, torch, websocket-client, reportlab, PyMuPDF, pyModbusTCP
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+    - Document impact on WebSocket communication layer and vision pipeline
+  specs:
+    - Use Given/When/Then for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+    - Capture existing SQLite schema in specs where relevant
+  design:
+    - Include sequence diagrams for robot-vision-control flows
+    - Document architecture decisions with rationale
+    - Consider separation of concerns (duplicated Clases.py in Menu/ and Control/)
+  tasks:
+    - Group by phase, use hierarchical numbering
+    - Keep tasks completable in one session
+  apply:
+    tdd: false
+    test_command: ""
+  verify:
+    test_command: ""
+    build_command: ""
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas
