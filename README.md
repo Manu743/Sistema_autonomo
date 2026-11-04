@@ -18,7 +18,7 @@ Sistema_autonomo/
 │   └── Control.py      # Video streaming, YOLOv5, ArUco, WebSocket, grilla
 ├── Nueva carpeta/      # Prototipos y firmware Arduino
 │   └── websocket/websocket.ino  # ESP32 WebSocket server
-└── datos.db            # Base de datos SQLite
+└── datos.db            # Base de datos SQLite local (no versionada)
 ```
 
 ## Requisitos
@@ -37,6 +37,20 @@ python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 ```
+
+## Base de datos
+
+`datos.db` no se versiona porque contiene datos personales y hashes de contraseñas.
+Para crear la base local con el usuario administrador inicial:
+
+```bash
+set SEED_ADMIN_PASSWORD=tu-contrasena
+python "./Menu/init_db.py"
+```
+
+El firmware de `Nueva carpeta/websocket` lee las credenciales de red desde
+`secrets.h`, que tampoco se versiona: copiar `secrets.example.h` a `secrets.h`
+y completar los valores.
 
 ## Uso
 

@@ -71,7 +71,7 @@ Issues are grouped by type and ordered by severity within each group.
 | S1 | **SQL injection — table/column names interpolated** | Menu/bd.py lines 287-288, 304, 316 | CRITICAL | Modificar(), Deshabilitar(), Habilitar() build queries with f-strings: "UPDATE {tabla} SET ... WHERE {condicion} = {id}". Both 	abla and condicion come from caller code and are not parameterized. id is also interpolated directly. |
 | S2 | **SQL injection — unreachable but dangerous** | Menu/bd.py line 214 | MEDIUM | First Datos_matriz definition has a hardcoded SQL string comment + a parameterized query; overwritten immediately by second definition — dead code that signals past unsafe practices. |
 | S3 | **Password hashing — SHA-256 without salt** | Menu/bd.py line 128, GUI Login/Loguin.py line 84 | MEDIUM | hashlib.sha256(password.encode()).hexdigest() uses raw SHA-256 with no salt, no bcrypt/argon2. Vulnerable to rainbow table attacks. |
-| S4 | **Sensitive credentials in source** | Menu/datos.py lines 4-6 | HIGH | Plaintext passwords committed: Manu743_1905, Nat743, Wili743. These are seed data but still exposed. |
+| S4 | **Sensitive credentials in source** | Menu/datos.py, Nueva carpeta/websocket/websocket.ino | HIGH | Plaintext passwords and WiFi credentials were committed (values redacted). Secrets must come from environment variables or untracked config files. |
 
 ### 🏗️ ARCHITECTURE (8 issues)
 

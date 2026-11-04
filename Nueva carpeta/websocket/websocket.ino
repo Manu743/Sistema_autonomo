@@ -1,9 +1,9 @@
 #include <WiFi.h>
 #include <WebSocketsServer.h>
 
-// Configura tu red WiFi
-const char* ssid = "Manu";
-const char* password = "manu1905";
+// Credenciales de red: se definen en secrets.h, fuera del repositorio.
+// Copiar secrets.example.h como secrets.h y completar los valores.
+#include "secrets.h"
 
 // Puerto WebSocket (ej. 81)
 WebSocketsServer webSocket = WebSocketsServer(81);
@@ -12,7 +12,7 @@ void setup() {
   Serial.begin(115200);
 
   // Conectar a WiFi
-  WiFi.begin(ssid, password);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
     Serial.println("Conectando a WiFi...");

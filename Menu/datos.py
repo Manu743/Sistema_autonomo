@@ -1,9 +1,8 @@
 from Clases import *
 from bd import *
-# Definir los datos de un usuario
-user1 = Usuarios('Manuel Arenas Agrada','5807967','Administrador','Manu743','Manu743_1905')
-user2 = Usuarios('Natalia','5674234','Operador','Nat','Nat743')
-user3 = Usuarios('Wilfredo','56323456','Operador','Wili','Wili743')
+
+# Los usuarios iniciales se crean con Menu/init_db.py a partir de variables de
+# entorno: no se versionan datos personales ni contraseñas en el repositorio.
 
 Robot1 = Robots('Robot1',5,50,80,12,'192.168.1.101','192.168.1.111','192.168.1.121')
 Robot2 = Robots('Robot2',5,50,80,20,'192.168.1.102','192.168.1.112','192.168.1.122')
@@ -32,10 +31,6 @@ db_manager = Base_Datos()
 
 # Llamar al método llenar_Usuarios con el argumento correcto
 db_manager.agregar_matriz(busqueda)
-
-#db_manager.llenar_Usuarios(user1)
-#db_manager.llenar_Usuarios(user2)
-#db_manager.llenar_Usuarios(user3)
 
 #db_manager.Agregar_Robot(Robot1)
 #db_manager.Agregar_Robot(Robot2)

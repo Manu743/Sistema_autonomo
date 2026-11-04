@@ -1,2 +1,8 @@
 # Local Pi runtime state
 .atl/
+
+# Credenciales locales del ESP32 (WiFi)
+secrets.h
+
+# Base de datos local con datos personales
+datos.db
